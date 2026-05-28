@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+
+# Generated / runtime
+backend/static/audio/*
+!backend/static/audio/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/temp-*.mp3
+backend/temp.mp3
+*.log
+debug-*.log
+.cursor/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
