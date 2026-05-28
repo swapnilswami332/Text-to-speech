@@ -1,6 +1,6 @@
-# NaturalReader Mini Clone
+# Text To Speech
 
-A minimal working clone of [NaturalReader](https://www.naturalreaders.com/) with AI-powered text-to-speech.
+A NaturalReader-inspired text-to-speech web app with AI-powered speech generation.
 
 ## Tech Stack
 
@@ -38,8 +38,8 @@ Open http://localhost:5173 in your browser. The Vite dev server proxies `/api` r
 
 - Type or paste text and generate speech
 - Upload PDF files for text extraction
-- Voice selector UI (single backend model in v1)
-- Audio playback with progress tracking
+- Voice selector UI with multiple voices
+- Audio playback with progress tracking, pause/resume, and 5-second skip
 - Responsive NaturalReader-inspired UI
 
 ## API Endpoints
@@ -48,5 +48,5 @@ Open http://localhost:5173 in your browser. The Vite dev server proxies `/api` r
 |--------|------|-------------|
 | GET | `/api/health` | Health check |
 | POST | `/api/tts` | Generate speech, returns audio URL |
-| POST | `/api/tts/stream` | Generate speech, returns WAV file |
+| POST | `/api/tts/stream` | Generate speech, returns audio file |
 | POST | `/api/extract-pdf` | Extract text from uploaded PDF |
