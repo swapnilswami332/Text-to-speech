@@ -34,6 +34,45 @@ npm run dev
 
 Open http://localhost:5173 in your browser. The Vite dev server proxies `/api` requests to the backend on port **800**.
 
+## Production (Docker)
+
+Build and run a single container that serves the React UI and FastAPI backend:
+
+```bash
+docker build -t text-to-speech .
+docker run --rm -p 8000:8000 text-to-speech
+```
+
+Open http://localhost:8000. Set `PORT` if your platform assigns a non-default port (for example `-e PORT=8080`). Optional: `CORS_ORIGINS` as a comma-separated list when the frontend is hosted on another origin.
+
+## Deploy free (no payment)
+
+This app ships as one Docker image (React UI + FastAPI). **Render** offers a free web service tier: no credit card, HTTPS, and deploys from GitHub. Good for demos and personal projects.
+
+**Limits on Render Free:** the app sleeps after ~15 minutes without traffic (first request after that can take ~1 minute), and you get 750 instance hours per month per workspace. See [Render free tier docs](https://render.com/docs/free).
+
+### Option A — Blueprint (recommended)
+
+1. Push this repo to GitHub (`swapnilswami332/Text-to-speech`).
+2. Sign up at [render.com](https://render.com) (GitHub login is fine).
+3. Open **[Create Blueprint from repo](https://dashboard.render.com/blueprint/new)** and select `Text-to-speech`.
+4. Render reads the root `render.yaml`, creates a **Free** Docker web service, and deploys.
+5. When the deploy finishes, open the `*.onrender.com` URL from the dashboard.
+
+After the service exists, every push to `main` redeploys automatically.
+
+### Option B — Manual web service
+
+1. [Render Dashboard](https://dashboard.render.com) → **New** → **Web Service** → connect this GitHub repo.
+2. **Runtime:** Docker · **Instance type:** Free · **Health check path:** `/api/health`
+3. Create the service and wait for the first deploy.
+
+### Notes
+
+- Edge TTS needs outbound internet from the server (Render provides this).
+- Do not add a payment method on Render unless you want paid overages; stay on the **Free** instance type.
+- For local Docker testing, use the **Production (Docker)** section above.
+
 ## Features
 
 - Type or paste text and generate speech

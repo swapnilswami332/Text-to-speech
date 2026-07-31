@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -6,24 +7,29 @@ from pathlib import Path
 from pydantic import BaseModel
 import shutil
 
-from services.tts_service import synthesize, AUDIO_DIR, VOICES
+from services.tts_service import synthesize, VOICES
 from services.pdf_service import extract_text_from_pdf
 from services.text_cleaner import clean_text, chunk_text
 
 app = FastAPI(title="NaturalReader Mini Clone API")
 
+_cors_origins = os.environ.get("CORS_ORIGINS", "*")
+_origins = [o.strip() for o in _cors_origins.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials="*" not in _origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
+STATIC_DIR = Path(__file__).parent / "static"
+(STATIC_DIR / "audio").mkdir(parents=True, exist_ok=True)
 
 UPLOAD_DIR = Path(__file__).parent / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+SPA_DIR = Path(__file__).parent / "spa"
 
 
 class TTSRequest(BaseModel):
@@ -111,3 +117,9 @@ async def extract_pdf(file: UploadFile = File(...)):
         save_path.unlink(missing_ok=True)
 
     return ExtractResponse(text=text, pages=pages_count)
+
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+if SPA_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=str(SPA_DIR), html=True), name="spa")
