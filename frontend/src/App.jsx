@@ -25,6 +25,7 @@ export default function App() {
 
   const audioRef = useRef(null);
   const audioUrlRef = useRef(null);
+  const audioBlobRef = useRef(null);
   const progressInterval = useRef(null);
   const lastGeneratedRef = useRef({ text: '', voiceId: '' });
 
@@ -54,6 +55,7 @@ export default function App() {
       URL.revokeObjectURL(audioUrlRef.current);
       audioUrlRef.current = null;
     }
+    audioBlobRef.current = null;
     lastGeneratedRef.current = { text: '', voiceId: '' };
     setIsPlaying(false);
     setProgress(0);
@@ -61,20 +63,11 @@ export default function App() {
     setHighlightedText('');
   }, [stopProgressTimer]);
 
-  const generateAndPlay = useCallback(async () => {
-    if (!text.trim()) {
-      setError('Please enter some text first.');
-      return;
-    }
-
-    setError('');
-    setIsLoading(true);
-    cleanupAudio();
-
-    try {
-      const blob = await generateSpeech(text, selectedVoice.id);
+  const attachAudioFromBlob = useCallback(
+    (blob) => {
       const url = URL.createObjectURL(blob);
       audioUrlRef.current = url;
+      audioBlobRef.current = blob;
       lastGeneratedRef.current = { text, voiceId: selectedVoice.id };
 
       const audio = new Audio(url);
@@ -91,6 +84,40 @@ export default function App() {
         stopProgressTimer();
       });
 
+      return audio;
+    },
+    [text, selectedVoice.id, playbackRate, stopProgressTimer]
+  );
+
+  const ensureAudioBlob = useCallback(async () => {
+    const needsNewAudio =
+      !audioBlobRef.current ||
+      lastGeneratedRef.current.text !== text ||
+      lastGeneratedRef.current.voiceId !== selectedVoice.id;
+
+    if (!needsNewAudio) {
+      return audioBlobRef.current;
+    }
+
+    cleanupAudio();
+    const blob = await generateSpeech(text, selectedVoice.id);
+    attachAudioFromBlob(blob);
+    return blob;
+  }, [text, selectedVoice.id, cleanupAudio, attachAudioFromBlob]);
+
+  const generateAndPlay = useCallback(async () => {
+    if (!text.trim()) {
+      setError('Please enter some text first.');
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+    cleanupAudio();
+
+    try {
+      await ensureAudioBlob();
+      const audio = audioRef.current;
       await audio.play();
       setIsPlaying(true);
       setIsLoading(false);
@@ -114,7 +141,7 @@ export default function App() {
       }
       setError(detail || err.message || 'Failed to generate speech. Is the backend running?');
     }
-  }, [text, selectedVoice.id, playbackRate, cleanupAudio, startProgressTimer, stopProgressTimer]);
+  }, [text, ensureAudioBlob, cleanupAudio, startProgressTimer]);
 
   const handlePlay = useCallback(async () => {
     const needsNewAudio =
@@ -172,6 +199,41 @@ export default function App() {
     }
   }, [playbackRate]);
 
+  const handleDownload = useCallback(async () => {
+    if (!text.trim()) {
+      setError('Please enter some text first.');
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const blob = await ensureAudioBlob();
+      const slug = selectedVoice.name.toLowerCase().replace(/\s+/g, '-');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `text-to-speech-${slug}.mp3`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      let detail = err.response?.data?.detail;
+      if (!detail && err.response?.data instanceof Blob) {
+        try {
+          const errText = await err.response.data.text();
+          const parsed = JSON.parse(errText);
+          detail = parsed.detail;
+        } catch {
+          // ignore parse errors
+        }
+      }
+      setError(detail || err.message || 'Failed to download audio.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [text, selectedVoice.name, ensureAudioBlob]);
+
   const handleUploadPdf = useCallback(async (file) => {
     setIsExtractingPdf(true);
     setError('');
@@ -212,9 +274,11 @@ export default function App() {
               onRewind={handleRewind}
               onForward={handleForward}
               onToggleSpeed={handleToggleSpeed}
+              onDownload={handleDownload}
               playbackRate={playbackRate}
               progress={progress}
               duration={duration}
+              canDownload={Boolean(text.trim())}
             />
           </div>
 

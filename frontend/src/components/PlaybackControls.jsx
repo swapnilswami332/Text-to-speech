@@ -5,9 +5,11 @@ export default function PlaybackControls({
   onRewind,
   onForward,
   onToggleSpeed,
+  onDownload,
   playbackRate,
   progress,
   duration,
+  canDownload,
 }) {
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -80,6 +82,25 @@ export default function PlaybackControls({
         className="text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {playbackRate}x
+      </button>
+
+      {/* Download */}
+      <button
+        type="button"
+        onClick={onDownload}
+        disabled={isLoading || !canDownload}
+        aria-label="Download audio"
+        title="Download MP3"
+        className="text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
+          />
+        </svg>
       </button>
 
       {/* Progress */}
