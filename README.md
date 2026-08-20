@@ -9,7 +9,7 @@ A NaturalReader-inspired text-to-speech web app with AI-powered speech generatio
 - **Audio:** Web Audio API, Blob URLs
 
 ## Quick Start
-
+ 
 ### Backend
 
 ```powershell
